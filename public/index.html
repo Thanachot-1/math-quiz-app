@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แอปฝึกคณิตศาสตร์</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>แอปฝึกโจทย์คณิตศาสตร์</h1>
+    <div id="set-selection">
+      <label for="question-count">จำนวนข้อ:</label>
+      <input type="number" id="question-count" min="1" max="10" value="3" />
+      <br>
+      <button onclick="generateFromLLM()">สุ่มโจทย์จาก LLM</button>
+      <div id="loading" class="hidden">กำลังโหลดโจทย์...</div>
+    </div>
+    <div id="quiz-container" class="hidden">
+      <p id="question-text"></p>
+      <input type="number" id="answer-input" placeholder="คำตอบของคุณ" />
+      <button onclick="submitAnswer()">ตอบ</button>
+    </div>
+    <div id="result-container" class="hidden">
+      <h2>คุณได้ <span id="score"></span> คะแนน</h2>
+      <button onclick="restart()">เริ่มใหม่</button>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

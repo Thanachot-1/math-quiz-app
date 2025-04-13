@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Quiz Tutor - คำถาม</title>
+  <style>
+    body {
+      font-family: 'Prompt', sans-serif;
+      background: linear-gradient(135deg, #e0c3fc, #8ec5fc);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+      padding: 30px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #6366f1;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .quiz-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      background-color: #f3f4f6;
+      padding: 12px;
+      border-radius: 1rem;
+    }
+
+    .quiz-info div {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .questions {
+      counter-reset: question-counter;
+    }
+
+    .question-item {
+      margin-bottom: 30px;
+      padding: 20px;
+      border-radius: 1rem;
+      background-color: #f9fafb;
+      counter-increment: question-counter;
+      border-left: 5px solid #6366f1;
+    }
+
+    .question-text {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+
+    .question-text::before {
+      content: counter(question-counter) ". ";
+      font-weight: bold;
+      color: #6366f1;
+    }
+
+    .answer-section {
+      background-color: #f0f9ff;
+      padding: 15px;
+      border-radius: 0.8rem;
+      margin-top: 15px;
+      border-left: 3px solid #10b981;
+    }
+
+    .answer-title {
+      font-weight: bold;
+      color: #10b981;
+      margin-bottom: 10px;
+    }
+
+    .explanation {
+      font-size: 1rem;
+      color: #4b5563;
+    }
+
+    button {
+      background-color: #6366f1;
+      color: white;
+      border: none;
+      padding: 12px;
+      font-size: 1rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+      display: block;
+      width: 200px;
+      margin: 30px auto 0;
+    }
+
+    button:hover {
+      background-color: #4f46e5;
+    }
+
+    .loading {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 50px 0;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ข้อสอบที่สร้างโดย AI</h1>
+    
+    <div class="quiz-info">
+      <div id="category-display">วิชา: คณิตศาสตร์</div>
+      <div id="difficulty-display">ระดับ: กลาง</div>
+    </div>
+    
+    <div id="loading" class="loading">กำลังสร้างข้อสอบด้วย AI...</div>
+    <div id="questions-container" class="questions" style="display: none;"></div>
+    
+    <button onclick="window.location.href='/'">กลับไปหน้าหลัก</button>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // รับพารามิเตอร์จาก URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const category = urlParams.get('category') || 'math';
+      const difficulty = urlParams.get('difficulty') || 'medium';
+      
+      // แสดงข้อมูลวิชาและระดับความยาก
+      displayQuizInfo(category, difficulty);
+      
+      // เรียก API เพื่อให้ LLM สร้างคำถาม
+      fetchQuestions(category, difficulty);
+    });
+    
+    function displayQuizInfo(category, difficulty) {
+      const categoryDisplay = document.getElementById('category-display');
+      const difficultyDisplay = document.getElementById('difficulty-display');
+      
+      const categoryMap = {
+        'math': 'คณิตศาสตร์',
+        'science': 'วิทยาศาสตร์',
+        'english': 'ภาษาอังกฤษ',
+        'history': 'สังคมศึกษา'
+      };
+      
+      const difficultyMap = {
+        'easy': 'ง่าย',
+        'medium': 'กลาง',
+        'hard': 'ยาก'
+      };
+      
+      categoryDisplay.textContent = 'วิชา: ' + (categoryMap[category] || category);
+      difficultyDisplay.textContent = 'ระดับ: ' + (difficultyMap[difficulty] || difficulty);
+    }
+    
+    function fetchQuestions(category, difficulty) {
+  const loadingDiv = document.getElementById('loading');
+  const questionsContainer = document.getElementById('questions-container');
+  
+  fetch(`/api/generate-questions?category=${category}&difficulty=${difficulty}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // สร้าง UI สำหรับแสดงคำถาม
+      displayQuestions(data.questions);
+      
+      // ซ่อน loading และแสดงคำถาม
+      loadingDiv.style.display = 'none';
+      questionsContainer.style.display = 'block';
+    })
+    .catch(error => {
+      console.error('Error details:', error);
+      loadingDiv.textContent = 'เกิดข้อผิดพลาด: ' + error.message;
+    });
+}
+    
+    function displayQuestions(questions) {
+      const questionsContainer = document.getElementById('questions-container');
+      questionsContainer.innerHTML = '';
+      
+      questions.forEach((question, index) => {
+        const questionItem = document.createElement('div');
+        questionItem.className = 'question-item';
+        
+        // สร้าง HTML สำหรับคำถามและคำตอบ
+        questionItem.innerHTML = `
+          <div class="question-text">${question.text}</div>
+          <div class="answer-section">
+            <div class="answer-title">เฉลย:</div>
+            <div class="answer">${question.answer}</div>
+            <div class="explanation">${question.explanation}</div>
+          </div>
+        `;
+        
+        questionsContainer.appendChild(questionItem);
+      });
+    }
+  </script>
+</body>
+</html>
